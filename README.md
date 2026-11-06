@@ -1,33 +1,47 @@
 # Pru-Api
 
-Personal API built with FastAPI.
+Personal API built with FastAPI, SQLAlchemy, and PostgreSQL (SQLite is used locally by default).
 
 ## Menjalankan secara lokal
 
-1. Buat dan aktifkan virtual environment (opsional, tetapi disarankan):
+```bash
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# Windows PowerShell: .venv\\Scripts\\Activate.ps1
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # macOS/Linux
-   # .venv\\Scripts\\activate  # Windows PowerShell
-   ```
+API berjalan di `http://127.0.0.1:8000`; dokumentasi interaktif ada di `http://127.0.0.1:8000/docs`. Database SQLite lokal dibuat otomatis sebagai `pru_api.db`.
 
-2. Pasang dependensi:
+Untuk lingkungan produksi, atur `DATABASE_URL` ke URL PostgreSQL dan `SECRET_KEY` ke nilai rahasia yang kuat. Contoh membuat secret:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
-3. Jalankan server:
+## Autentikasi
 
-   ```bash
-   uvicorn main:app --reload
-   ```
+Buat akun dengan `POST /auth/register`:
 
-Server berjalan di `http://127.0.0.1:8000`. Dokumentasi interaktif tersedia di `http://127.0.0.1:8000/docs`.
+```json
+{"username":"alvian","password":"password-yang-kuat"}
+```
 
-## Endpoint
+Login melalui `POST /auth/login` menggunakan form URL-encoded dengan field `username` dan `password`. Respons berisi access token Bearer yang berlaku selama 60 menit. Masukkan token melalui tombol **Authorize** di `/docs`, atau kirim header `Authorization: Bearer <token>`.
 
-- `GET /` — informasi API.
-- `GET /status` — status layanan.
-- `GET /health` — health check, mengembalikan `{"status":"ok"}`.
+`GET /auth/me` menampilkan akun yang sedang terautentikasi.
+
+## CRUD item
+
+Semua endpoint item memerlukan token. Data item hanya dapat dibaca atau diubah oleh pemiliknya.
+
+- `POST /items` — buat item (`title`, opsional `description`).
+- `GET /items` — daftar item milik akun.
+- `GET /items/{item_id}` — baca satu item.
+- `PUT /items/{item_id}` — ubah item.
+- `DELETE /items/{item_id}` — hapus item.
+
+## Deploy ke Render
+
+File `render.yaml` menyiapkan web service dan PostgreSQL. Di Render, pilih **New + → Blueprint**, hubungkan repositori ini, lalu ikuti petunjuknya. Render akan membuat `DATABASE_URL` dan `SECRET_KEY` dari konfigurasi; jangan commit secret ke repositori.

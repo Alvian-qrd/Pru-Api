@@ -1,3 +1,7 @@
-
 fastapi
-uvicorn
+uvicorn[standard]
+SQLAlchemy
+psycopg[binary]
+PyJWT
+pwdlib[argon2]
+python-multipart
